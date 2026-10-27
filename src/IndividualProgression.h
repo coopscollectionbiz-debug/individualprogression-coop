@@ -423,7 +423,7 @@ public:
     bool isExcludedAccount(Player* player);
     bool isBotAccount(Player* player);
     bool isNormalAccount(Player* player);
-    void SyncBotsProgressionToLeader(Group* group);
+    void SyncBotsProgressionToLeader(Group* group, Player* member);
     bool isAttuned(Player* player);
     bool isPlayerInDungeonOrRaid(Player* player);
     void checkIPPhasing(Player* player, uint32 newArea);

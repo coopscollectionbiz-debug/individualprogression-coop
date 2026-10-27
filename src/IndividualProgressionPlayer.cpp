@@ -995,12 +995,13 @@ public:
         if (!player || !player->IsInWorld() || !group)
             return false;
 
-        Player* groupLeader = ObjectAccessor::FindPlayerByLowGUID(group->GetLeaderGUID().GetCounter());
-        uint8 currentState = sIndividualProgression->GetPlayerProgressionFromQuests(player);
-        uint8 groupLeaderState = sIndividualProgression->GetPlayerProgressionFromQuests(groupLeader);
-
         if (!sIndividualProgression->enabled)
             return true;
+
+        Player* groupLeader = ObjectAccessor::FindPlayer(group->GetLeaderGUID());
+        uint8 currentState = sIndividualProgression->GetPlayerProgressionFromQuests(player);
+        uint8 groupLeaderState = sIndividualProgression->GetPlayerProgressionFromQuests(groupLeader);
+        bool const updateProgression = groupLeader && groupLeader->IsInWorld() && currentState != groupLeaderState;
 
         if (!sIndividualProgression->isNormalAccount(player)) // player is either a RNDbot or has an excluded account
         {
@@ -1010,7 +1011,9 @@ public:
                 {
                     if (player->GetLevel() <= 60) // invited player is in Vanilla
                     {
-                        sIndividualProgression->ForceUpdateProgressionState(player, static_cast<ProgressionState>(groupLeaderState));
+                        if (updateProgression)
+                            sIndividualProgression->ForceUpdateProgressionState(
+                                player, static_cast<ProgressionState>(groupLeaderState));
                         return true;
                     }
                     else
@@ -1020,7 +1023,9 @@ public:
                 {
                     if (player->GetLevel() > 60 && player->GetLevel() <= 70) // invited excluded player is in TBC
                     {
-                        sIndividualProgression->ForceUpdateProgressionState(player, static_cast<ProgressionState>(groupLeaderState));
+                        if (updateProgression)
+                            sIndividualProgression->ForceUpdateProgressionState(
+                                player, static_cast<ProgressionState>(groupLeaderState));
                         return true;
                     }
                     else
@@ -1030,7 +1035,9 @@ public:
                 {
                     if (player->GetLevel() > 70) // invited excluded player is in WotLK
                     {
-                        sIndividualProgression->ForceUpdateProgressionState(player, static_cast<ProgressionState>(groupLeaderState));
+                        if (updateProgression)
+                            sIndividualProgression->ForceUpdateProgressionState(
+                                player, static_cast<ProgressionState>(groupLeaderState));
                         return true;
                     }
                     else
@@ -1039,8 +1046,9 @@ public:
             }
             else // not enforcing Group Rules
             {
-                if (currentState != groupLeaderState)
-                    sIndividualProgression->ForceUpdateProgressionState(player, static_cast<ProgressionState>(groupLeaderState));
+                if (updateProgression)
+                    sIndividualProgression->ForceUpdateProgressionState(
+                        player, static_cast<ProgressionState>(groupLeaderState));
 
                 return true;
             }
@@ -1393,14 +1401,14 @@ public:
 
     void OnAddMember(Group* group, ObjectGuid guid) override
     {
-        if (!group || !guid)
+        if (!sIndividualProgression->enabled || !group || !guid)
             return;
 
         Player* added = ObjectAccessor::FindPlayer(guid);
         if (!added)
             return;
 
-        sIndividualProgression->SyncBotsProgressionToLeader(group);
+        sIndividualProgression->SyncBotsProgressionToLeader(group, added);
     }
 };
 

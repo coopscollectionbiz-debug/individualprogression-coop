@@ -77,29 +77,41 @@ void IndividualProgression::ForceUpdateProgressionState(Player* player, Progress
     if (!player || !player->IsInWorld())
         return;
 
-    if (!newState)
+    if (newState > PROGRESSION_WOTLK_TIER_5)
         return;
 
-    // remove all hidden progression quests first
+    bool removed = false;
+    bool rewarded = false;
+    // Keep the rewarded prefix intact; only remove quests above the requested state.
     for (uint8 i = PROGRESSION_MOLTEN_CORE; i <= PROGRESSION_WOTLK_TIER_5; ++i)
     {
-        uint32 PROGRESSION_QUEST = 66000 + i;
-        if (player->GetQuestStatus(PROGRESSION_QUEST) == QUEST_STATUS_REWARDED)
-            player->RemoveRewardedQuest(PROGRESSION_QUEST);
+        uint32 questId = 66000 + i;
+        if (i > newState && player->GetQuestStatus(questId) == QUEST_STATUS_REWARDED)
+        {
+            player->RemoveRewardedQuest(questId);
+            removed = true;
+        }
     }
 
     for (uint8 i = PROGRESSION_MOLTEN_CORE; i <= newState; ++i)
     {
-        uint32 PROGRESSION_QUEST = 66000 + i;
-        Quest const* quest = sObjectMgr->GetQuestTemplate(PROGRESSION_QUEST);
+        uint32 questId = 66000 + i;
+        if (player->GetQuestStatus(questId) == QUEST_STATUS_REWARDED)
+            continue;
 
+        Quest const* quest = sObjectMgr->GetQuestTemplate(questId);
         if (!quest)
             continue;
 
         player->AddQuest(quest, nullptr);
-        player->CompleteQuest(PROGRESSION_QUEST);
+        player->CompleteQuest(questId);
         player->RewardQuest(quest, 0, player, false, false);
+        rewarded = true;
     }
+
+    // RewardQuest saves the player. A downgrade without rewards still needs a save.
+    if (removed && !rewarded)
+        player->SaveToDB(false, false);
 }
 
 void IndividualProgression::CheckAdjustments(Player* player) const
@@ -408,32 +420,19 @@ bool IndividualProgression::isPlayerInDungeonOrRaid(Player* player)
     return (map && (map->IsDungeon() || map->IsRaid()));
 }
 
-void IndividualProgression::SyncBotsProgressionToLeader(Group* group)
+void IndividualProgression::SyncBotsProgressionToLeader(Group* group, Player* member)
 {
-    if (!group)
+    if (!enabled || !group || !member || !member->IsInWorld() || isNormalAccount(member))
         return;
 
-    ObjectGuid leaderGuid = group->GetLeaderGUID();
-    if (!leaderGuid)
+    Player* leader = ObjectAccessor::FindPlayer(group->GetLeaderGUID());
+    if (!leader || !leader->IsInWorld() || !isNormalAccount(leader))
         return;
 
-    Player* leader = ObjectAccessor::FindPlayer(leaderGuid);
-    if (!leader || !isNormalAccount(leader))
-        return;
-
+    // Called for the joining player only. Existing members may be updating on other map workers.
     uint8 refProgress = GetPlayerProgressionFromQuests(leader);
-
-    if (!refProgress)
-        return;
-
-    for (GroupReference* itr = group->GetFirstMember(); itr; itr = itr->next())
-    {
-        Player* member = itr->GetSource();
-        if (!member || isNormalAccount(member))
-            continue;
-
+    if (GetPlayerProgressionFromQuests(member) != refProgress)
         ForceUpdateProgressionState(member, static_cast<ProgressionState>(refProgress));
-    }
 }
 
 void IndividualProgression::checkIPPhasing(Player* player, uint32 newArea)
