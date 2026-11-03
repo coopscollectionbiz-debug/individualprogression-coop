@@ -315,11 +315,10 @@ public:
             if (!target)
                 return false;
 
-            /* The Scarab Gong can still be seen during the outdoor AQ war.  */
-            if (sIndividualProgression->hasPassedProgression(target, PROGRESSION_AQ_WAR))
-                return sIndividualProgression->isBeforeProgression(target, PROGRESSION_PRE_AQ);
-            else
-                return sIndividualProgression->hasPassedProgression(target, PROGRESSION_BLACKWING_LAIR);
+            // Keep the gong available after AQ progression so players
+            // can complete the original Scepter questline later.
+            return sIndividualProgression->hasPassedProgression(
+                target, PROGRESSION_BLACKWING_LAIR);
         }
 
         void NextStage(uint32 timeUntil = 100)
@@ -409,7 +408,8 @@ public:
 
     bool OnQuestReward(Player* player, GameObject* go, Quest const* quest, uint32 /*opt*/) override
     {
-        if ((quest->GetQuestId() != QUEST_BANG_A_GONG) && (player->GetQuestStatus(SIMPLY_BANG_A_GONG) != QUEST_STATUS_REWARDED))
+        if (quest->GetQuestId() != QUEST_BANG_A_GONG &&
+            quest->GetQuestId() != SIMPLY_BANG_A_GONG)
             return false;
 
         if (auto* gongAI = dynamic_cast<gobject_scarab_gongAI*>(go->AI()))
@@ -420,15 +420,17 @@ public:
 
     bool OnGossipHello(Player* player, GameObject* go) override
     {
-        if ((player->GetQuestStatus(QUEST_BANG_A_GONG) == QUEST_STATUS_REWARDED) || (player->GetQuestStatus(SIMPLY_BANG_A_GONG) == QUEST_STATUS_REWARDED))
-        {
-            if (auto* gongAI = dynamic_cast<gobject_scarab_gongAI*>(go->AI()))
-                gongAI->OpenGate(player, false);
-        }
-        else
+        // A player who used the shortcut must still be able to
+        // complete the original Scepter questline for Scarab Lord.
+        if (player->GetQuestStatus(QUEST_BANG_A_GONG) != QUEST_STATUS_REWARDED)
         {
             player->PrepareQuestMenu(go->GetGUID());
             player->SendPreparedQuest(go->GetGUID());
+        }
+        else
+        {
+            if (auto* gongAI = dynamic_cast<gobject_scarab_gongAI*>(go->AI()))
+                gongAI->OpenGate(player, false);
         }
         return true;
     }
