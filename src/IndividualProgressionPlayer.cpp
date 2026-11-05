@@ -581,8 +581,12 @@ public:
 
     bool OnPlayerBeforeTeleport(Player* player, uint32 mapid, float x, float y, float z, float /*orientation*/, uint32 /*options*/, Unit* /*target*/) override
     {
-        if (!player || !player->IsInWorld())
+        if (!player)
             return false;
+
+        // Not in world means between maps. The core only teleports such a player as a fallback (homebind after a failed worldport ack), and refusing it strands the player on no map for the session.
+        if (!player->IsInWorld())
+            return true;
 
         if (!sIndividualProgression->enabled || player->IsGameMaster() || !sIndividualProgression->isNormalAccount(player))
             return true;
@@ -1163,35 +1167,6 @@ public:
                     return;
             }
    
-            if (killed->GetEntry() == COLOSSUS_ZORA || killed->GetEntry() == COLOSSUS_REGAL || killed->GetEntry() == COLOSSUS_ASHI)
-            {
-                // no group
-                if (killed->GetEntry() == COLOSSUS_ZORA)
-                    killer->CompleteQuest(QUEST_COLOSSUS_ZORA);
-                else if (killed->GetEntry() == COLOSSUS_REGAL)
-                    killer->CompleteQuest(QUEST_COLOSSUS_REGAL);
-                else if (killed->GetEntry() == COLOSSUS_ASHI)
-                    killer->CompleteQuest(QUEST_COLOSSUS_ASHI);    
-               
-                if (group)
-                {
-                    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
-                    {
-                        Player* member = itr->GetSource();
-                        if (!member || !sIndividualProgression->isNormalAccount(member))
-                            continue;
-
-                        if (killed->GetEntry() == COLOSSUS_ZORA)
-                            member->CompleteQuest(QUEST_COLOSSUS_ZORA);
-                        else if (killed->GetEntry() == COLOSSUS_REGAL)
-                            member->CompleteQuest(QUEST_COLOSSUS_REGAL);
-                        else if (killed->GetEntry() == COLOSSUS_ASHI)
-                            member->CompleteQuest(QUEST_COLOSSUS_ASHI);
-                    }
-                }
-                return;
-            }
-
             uint32 ENTRY_KILLED = killed->GetEntry();
 
             if (group)

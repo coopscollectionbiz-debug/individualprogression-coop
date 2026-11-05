@@ -11,6 +11,7 @@
 enum
 {
     QUEST_BANG_A_GONG = 8743,
+    ITEM_SCEPTER_OF_THE_SHIFTING_SANDS = 21175,
 
     GO_GATE_OF_AHN_QIRAJ = 176146,
     GO_GLYPH_OF_AHN_QIRAJ = 176148,
@@ -420,17 +421,23 @@ public:
 
     bool OnGossipHello(Player* player, GameObject* go) override
     {
-        // A player who used the shortcut must still be able to
-        // complete the original Scepter questline for Scarab Lord.
-        if (player->GetQuestStatus(QUEST_BANG_A_GONG) != QUEST_STATUS_REWARDED)
+        QuestStatus bangStatus = player->GetQuestStatus(QUEST_BANG_A_GONG);
+        bool gongRung = (bangStatus == QUEST_STATUS_REWARDED) || (player->GetQuestStatus(SIMPLY_BANG_A_GONG) == QUEST_STATUS_REWARDED);
+
+        // Upstream #1310: the gate opens for everyone who rang the gong.
+        if (gongRung)
+            if (auto* gongAI = dynamic_cast<gobject_scarab_gongAI*>(go->AI()))
+                gongAI->OpenGate(player, false);
+
+        // Local (Release 1): a player who used the shortcut must still be able to
+        // complete the original Scepter questline for Scarab Lord, so the quest
+        // menu stays available until 'Bang a Gong!' itself is rewarded. This is a
+        // superset of upstream's condition (not rung, or Scepter in bags and the
+        // quest can be taken); the quest system still enforces its requirements.
+        if (bangStatus != QUEST_STATUS_REWARDED)
         {
             player->PrepareQuestMenu(go->GetGUID());
             player->SendPreparedQuest(go->GetGUID());
-        }
-        else
-        {
-            if (auto* gongAI = dynamic_cast<gobject_scarab_gongAI*>(go->AI()))
-                gongAI->OpenGate(player, false);
         }
         return true;
     }

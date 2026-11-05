@@ -1,8 +1,10 @@
+SET @OGUID    := 650000;
+
 DELETE FROM `gameobject` WHERE `id` IN (176146, 176147, 176148);
-INSERT INTO `gameobject` (`id`, `map`, `position_x`, `position_y`, `position_z`, `orientation`, `rotation2`, `rotation3`, `spawntimesecs`, `animprogress`, `state`) VALUES 
-(176146, 1, -8133.34, 1525.13, 17.1904, 6.28103, 0.00107995, -0.999999, 600, 100, 1), -- Gate of Ahn'Qiraj
-(176147, 1, -8133.34, 1525.13, 17.1904, 6.28103, 0.00107995, -0.999999, 600, 100, 1), -- Ahn'Qiraj Gate Roots
-(176148, 1, -8133.34, 1525.13, 17.1904, 6.28103, 0.00107995, -0.999999, 600, 100, 1); -- Ahn'Qiraj Gate Runes
+INSERT INTO `gameobject` (`guid`, `id`, `map`, `position_x`, `position_y`, `position_z`, `orientation`, `rotation2`, `rotation3`, `spawntimesecs`, `animprogress`, `state`) VALUES 
+(@OGUID+111, 176146, 1, -8133.34, 1525.13, 17.1904, 6.28103, 0.00107995, -0.999999, 600, 100, 1), -- Gate of Ahn'Qiraj
+(@OGUID+112, 176147, 1, -8133.34, 1525.13, 17.1904, 6.28103, 0.00107995, -0.999999, 600, 100, 1), -- Ahn'Qiraj Gate Roots
+(@OGUID+113, 176148, 1, -8133.34, 1525.13, 17.1904, 6.28103, 0.00107995, -0.999999, 600, 100, 1); -- Ahn'Qiraj Gate Runes
 
 -- Ghost Gate - should not be placed, remove it if it is present
 DELETE FROM `gameobject` WHERE `id` = 180322;
@@ -23,9 +25,10 @@ INSERT INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `size`,
 -- See related AC PR: https://github.com/azerothcore/azerothcore-wotlk/pull/12879/files
 UPDATE `gameobject_template` SET `type` = 2, `ScriptName` = "gobject_scarab_gong" WHERE `entry` = 180717;
 UPDATE `gameobject` SET `id` = 180717 WHERE `guid` = 49451;
-DELETE FROM `gameobject_questender` WHERE `quest`=8743;
+
+DELETE FROM `gameobject_questender` WHERE `quest` = 8743;
 INSERT INTO `gameobject_questender` (`id`, `quest`) VALUES (180717, 8743);
-DELETE FROM `gameobject_queststarter` WHERE `quest`=8743;
+DELETE FROM `gameobject_queststarter` WHERE `quest` = 8743;
 INSERT INTO `gameobject_queststarter` (`id`, `quest`) VALUES (180717, 8743);
 
 SET @STRING_ENTRY := 41100;
@@ -51,6 +54,7 @@ UPDATE `quest_template_locale` SET `Details` = 'Commençons par le commencement 
 
 -- New 'Bang a Gong!' quest. No rewards for completing this version. No mount, no title. Currently the Mallet of Zul'Farrak is required to bang the gong.
 -- New 'Chaos and Destruction' quest. Kill Colossus of Zora(15740), Regal(15741) and Ashi(15742)
+-- the kill quests use QuestInfoID 62 (Raid), the core gives no kill credit for any other type while in a raid group
 DELETE FROM `quest_template` WHERE `ID` IN (108743, 108744, 108745, 108746, 108747);
 INSERT INTO `quest_template` (`ID`, `QuestType`, `QuestLevel`, `MinLevel`, `QuestSortID`, `QuestInfoID`, `SuggestedGroupNum`, `RequiredFactionId1`, `RequiredFactionId2`, `RequiredFactionValue1`, `RequiredFactionValue2`, `RewardNextQuest`, `RewardXPDifficulty`, `RewardMoney`, `RewardMoneyDifficulty`, `RewardDisplaySpell`, `RewardSpell`, `RewardHonor`, `RewardKillHonor`, 
 `StartItem`, `Flags`, `RequiredPlayerKills`, `RewardItem1`, `RewardAmount1`, `RewardItem2`, `RewardAmount2`, `RewardItem3`, `RewardAmount3`, `RewardItem4`, `RewardAmount4`, `ItemDrop1`, `ItemDropQuantity1`, `ItemDrop2`, `ItemDropQuantity2`, `ItemDrop3`, `ItemDropQuantity3`, `ItemDrop4`, `ItemDropQuantity4`, 
@@ -60,10 +64,10 @@ INSERT INTO `quest_template` (`ID`, `QuestType`, `QuestLevel`, `MinLevel`, `Ques
 `RequiredItemCount1`, `RequiredItemCount2`, `RequiredItemCount3`, `RequiredItemCount4`, `RequiredItemCount5`, `RequiredItemCount6`, `Unknown0`, `ObjectiveText1`, `ObjectiveText2`, `ObjectiveText3`, `ObjectiveText4`, `VerifiedBuild`) VALUES 
 
 (108743, 0, 60, 60, 1377, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'Simply Bang a Gong!', '', '', NULL, 'Return to The Scarab Gong in Silithus.', 0, 0, 0, 0, 0, 0, 0, 0, 9240, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3, '', '', '', '', 12340),
-(108744, 2, 60, 60, 1377, 82, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 910, 7, 0, 609, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'Chaos and Destruction', 'Kill Lieutenant General Nokhor, 3 Colossal Anubisath Warbringers and 12 Supreme Anubisath Warbringers.', '', '', 'Return to Jonathan the Revelator at the Scarab Gong.', 15818, 15743, 15758, 0, 1, 3, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', '', '', NULL),
-(108745, 2, 60, 60, 1377, 82, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 910, 7, 0, 609, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'Colossus of Zora', 'Kill the Colossus of Zora.', '', '', 'Return to Jonathan the Revelator at the Scarab Gong.', 15740, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', '', '', NULL),
-(108746, 2, 60, 60, 1377, 82, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 910, 7, 0, 609, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'Colossus of Regal', 'Kill the Colossus of Regal.', '', '', 'Return to Jonathan the Revelator at the Scarab Gong.', 15741, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', '', '', NULL),
-(108747, 2, 60, 60, 1377, 82, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 910, 7, 0, 609, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'Colossus of Ashi', 'Kill the Colossus of Ashi.', '', '', 'Return to Jonathan the Revelator at the Scarab Gong.', 15742, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', '', '', NULL);
+(108744, 2, 60, 60, 1377, 62, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 910, 7, 0, 609, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'Chaos and Destruction', 'Kill Lieutenant General Nokhor, 3 Colossal Anubisath Warbringers and 12 Supreme Anubisath Warbringers.', '', '', 'Return to Jonathan the Revelator at the Scarab Gong.', 15818, 15743, 15758, 0, 1, 3, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', '', '', NULL),
+(108745, 2, 60, 60, 1377, 62, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 910, 7, 0, 609, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'Colossus of Zora', 'Kill the Colossus of Zora.', '', '', 'Return to Jonathan the Revelator at the Scarab Gong.', 15740, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', '', '', NULL),
+(108746, 2, 60, 60, 1377, 62, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 910, 7, 0, 609, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'Colossus of Regal', 'Kill the Colossus of Regal.', '', '', 'Return to Jonathan the Revelator at the Scarab Gong.', 15741, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', '', '', NULL),
+(108747, 2, 60, 60, 1377, 62, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 910, 7, 0, 609, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'Colossus of Ashi', 'Kill the Colossus of Ashi.', '', '', 'Return to Jonathan the Revelator at the Scarab Gong.', 15742, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', '', '', NULL);
 
 -- don't count quests for the loremaster achievement
 DELETE FROM `quest_template_addon` WHERE `ID` IN (108743, 108744, 108745, 108746, 108747);
@@ -71,9 +75,9 @@ INSERT INTO `quest_template_addon` (`ID`, `MaxLevel`, `AllowableClasses`, `Sourc
 `RequiredSkillID`, `RequiredSkillPoints`, `RequiredMinRepFaction`, `RequiredMaxRepFaction`, `RequiredMinRepValue`, `RequiredMaxRepValue`, `ProvidedItemCount`, `SpecialFlags`) VALUES 
 (108743, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 256),
 (108744, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 256),
-(108745, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 258),
-(108746, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 258),
-(108747, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 258);
+(108745, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 256),
+(108746, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 256),
+(108747, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 256);
 
 UPDATE `quest_template` SET `RewardNextQuest` = 0 WHERE `ID` = 8743; -- can be removed later
 
