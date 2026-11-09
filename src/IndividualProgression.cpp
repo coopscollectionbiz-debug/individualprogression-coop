@@ -173,8 +173,9 @@ void IndividualProgression::UpdateRNDbotSpells(Player* player)
     switch (player->getClass())
     {
     case CLASS_WARLOCK:
-        if (player->GetLevel() >= 40 && !player->HasSpell(7584)) // Summon Felsteed
-            player->learnSpell(7584, false);
+        // 5784 is Summon Felsteed (7584 is "Increased Gun", a wrong id that was taught here before).
+        if (player->GetLevel() >= 40 && !player->HasSpell(5784)) // Summon Felsteed
+            player->learnSpell(5784, false);
         break;
     case CLASS_PALADIN:
         if (player->GetLevel() >= 40 && !player->HasSpell(13819)) // Summon Warhorse
