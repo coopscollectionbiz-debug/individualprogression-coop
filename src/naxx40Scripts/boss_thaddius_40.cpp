@@ -327,7 +327,9 @@ public:
                 case EVENT_THADDIUS_CHAIN_LIGHTNING:
                 {
                     CustomSpellValues values;
-                    int32 customChainLightningDamage = 1850; // (1850, 2150), die 675
+                    // 1850 to 2150. The spell's own die (675) would push it to 2524, so the roll is
+                    // made here and spell_ip_exact_custom_damage keeps the die out.
+                    int32 customChainLightningDamage = urand(1850, 2150);
                     values.AddSpellMod(SPELLVALUE_BASE_POINT0, customChainLightningDamage);
                     values.AddSpellMod(SPELLVALUE_MAX_TARGETS, 15);
                     me->CastCustomSpell(SPELL_CHAIN_LIGHTNING, values, me->GetVictim(), TRIGGERED_NONE, nullptr, nullptr, ObjectGuid::Empty);
