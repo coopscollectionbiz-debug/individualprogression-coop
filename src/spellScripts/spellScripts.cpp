@@ -1,5 +1,6 @@
 #include "SpellMgr.h"
 #include "SpellScript.h"
+#include "SpellAuraEffects.h"
 #include "Player.h"
 #include "Chat.h"
 #include "ScriptMgr.h"
@@ -89,8 +90,32 @@ class spell_ip_exact_custom_damage : public SpellScript
     }
 };
 
+// The same for periodic damage: a damage-over-time aura cast with a script's own value ticks at
+// exactly that value. AuraEffect::CalculateAmount rolls the die on the stored value - 1 like
+// direct damage; this hook runs after it and puts the script's value back. Auras without a
+// custom value (GetBaseAmount equal to the spell's own base points) keep their roll.
+class spell_ip_exact_custom_periodic : public AuraScript
+{
+    PrepareAuraScript(spell_ip_exact_custom_periodic);
+
+    void CalcAmount(AuraEffect const* aurEff, int32& amount, bool& /*canBeRecalculated*/)
+    {
+        SpellEffectInfo const& effect = GetSpellInfo()->Effects[aurEff->GetEffIndex()];
+        int32 const stored = aurEff->GetBaseAmount();
+        if (effect.DieSides == 0 || stored == effect.BasePoints)
+            return;
+        amount = stored + 1;
+    }
+
+    void Register() override
+    {
+        DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_ip_exact_custom_periodic::CalcAmount, EFFECT_ALL, SPELL_AURA_PERIODIC_DAMAGE);
+    }
+};
+
 void AddSC_ipp_spell_scripts()
 {
     RegisterSpellScript(spell_detect_magic);
     RegisterSpellScript(spell_ip_exact_custom_damage);
+    RegisterSpellScript(spell_ip_exact_custom_periodic);
 }
