@@ -20,6 +20,16 @@ python -I tools/ip-audit/die_rolls.py --dbc <Spell.dbc> --spell-dbc-tsv spell_db
 2. Put its rollback in `rollback/world`.
 3. Never edit `data/sql/*/base`.
 
+## missing_ids.py
+
+Lists every `SPELL_`, `NPC_` and `GO_` constant in IP's C++ whose ID isn't in the game data. The worldserver checks the IDs in the database at startup, but not the ones the scripts hard-code. Display and text IDs are skipped.
+
+```
+python -I tools/ip-audit/missing_ids.py --dbc <Spell.dbc> --spell-dbc-tsv spell_dbc.tsv --creature-tsv creature.tsv --gameobject-tsv gameobject.tsv
+```
+
+The commands that make the exports are in the script's docstring.
+
 ## spell_dbc.py
 
 Reads the `Spell.dbc` fields the checks need, using the 3.3.5a (build 12340) layout.
