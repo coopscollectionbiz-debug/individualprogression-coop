@@ -58,7 +58,39 @@ class spell_detect_magic : public SpellScript
     }
 };
 
+// Direct damage cast with a script's own value lands at exactly that value.
+//
+// A value passed with CastCustomSpell / SPELLVALUE_BASE_POINTn still gets the spell's die roll:
+// SpellEffectInfo::CalcBaseValue stores it as value - 1 when the effect has DieSides, and
+// CalcValue then adds 1..DieSides. Where an IP script already picks its own damage (Patchwerk's
+// urand range, Grobbulus' Slime Spray), that roll pushes it up to DieSides - 1 above what the
+// script meant. Bound (spell_script_names, update SQL) only to the spells whose IP script states
+// its final damage; tools/ip-audit/die_rolls.py lists every call site.
+//
+// Casts without a custom value (other bosses using the same spell) keep their normal roll: the
+// value is only replaced when the cast's base points differ from the spell's own.
+class spell_ip_exact_custom_damage : public SpellScript
+{
+    PrepareSpellScript(spell_ip_exact_custom_damage);
+
+    void HandleDamage(SpellEffIndex effIndex)
+    {
+        SpellEffectInfo const& effect = GetSpellInfo()->Effects[effIndex];
+        int32 const stored = GetSpellValue()->EffectBasePoints[effIndex];
+        if (effect.DieSides == 0 || stored == effect.BasePoints)
+            return;
+        // Undo CalcBaseValue's - 1; the roll is what's left out.
+        SetEffectValue(stored + 1);
+    }
+
+    void Register() override
+    {
+        OnEffectLaunchTarget += SpellEffectFn(spell_ip_exact_custom_damage::HandleDamage, EFFECT_ALL, SPELL_EFFECT_SCHOOL_DAMAGE);
+    }
+};
+
 void AddSC_ipp_spell_scripts()
 {
     RegisterSpellScript(spell_detect_magic);
+    RegisterSpellScript(spell_ip_exact_custom_damage);
 }

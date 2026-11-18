@@ -42,14 +42,14 @@ enum Texts
 
 enum Spells
 {
-    SPELL_SHADOW_VOLLEY         = 30354,
-    SPELL_CLEAVE                = 31779,
-    SPELL_THUNDERCLAP           = 36706,
+    SPELL_SHADOW_VOLLEY         = 21341, // 30354
+    SPELL_CLEAVE                = 16044, // 31779
+    SPELL_THUNDERCLAP           = 15588, // 36706
     SPELL_VOID_BOLT             = 21066,
     SPELL_MARK_OF_KAZZAK        = 21056,
     SPELL_MARK_OF_KAZZAK_DAMAGE = 21058,
-    SPELL_ENRAGE                = 32964,
-    SPELL_CAPTURE_SOUL          = 32966,
+    SPELL_ENRAGE                = 21340, // 32964
+    SPELL_CAPTURE_SOUL          = 21054, // 32966
     SPELL_TWISTED_REFLECTION    = 21063,
 };
 
