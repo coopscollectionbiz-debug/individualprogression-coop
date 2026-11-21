@@ -103,8 +103,20 @@ class spell_grobbulus_poison_cloud_poison_damage_40 : public SpellScript
         SetEffectValue(urand(1110, 1290));
     }
 
+    // The core binds its cloud-size filter (spell_grobbulus_poison: inside the cloud's growing combat reach) to
+    // 28241 only through spell_script_names, and this script replaced that row, so every cloud hit everyone in
+    // the DBC's 30 yd: the Naxx40 raid died to Poison 39 yd from Grobbulus. Same filter here.
+    void FilterTargets(std::list<WorldObject*>& targets)
+    {
+        Unit* caster = GetCaster();
+        if (!caster)
+            return;
+        targets.remove_if([caster](WorldObject* target) { return !caster->IsWithinDist3d(target, 0.0f); });
+    }
+
     void Register() override
     {
+        OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_grobbulus_poison_cloud_poison_damage_40::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ENEMY);
         OnEffectLaunchTarget += SpellEffectFn(spell_grobbulus_poison_cloud_poison_damage_40::HandleDamageCalc, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
     }
 };
