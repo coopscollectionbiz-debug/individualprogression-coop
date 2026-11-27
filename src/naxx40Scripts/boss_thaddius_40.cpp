@@ -119,10 +119,12 @@ public:
 
     struct boss_thaddius_40AI : public BossAI
     {
-        explicit boss_thaddius_40AI(Creature* c) : BossAI(c, BOSS_THADDIUS), summons(me), ballLightningEnabled(false) { }
+        explicit boss_thaddius_40AI(Creature* c) : BossAI(c, BOSS_THADDIUS), ballLightningEnabled(false) { }
 
         EventMap events;
-        SummonList summons;
+        // No SummonList of our own: it hid BossAI::summons, so DespawnOnEvade (Thaddius is HARD_RESET) cleared the
+        // empty base list, left the pair just summoned by Reset standing, and the respawned Thaddius summoned a second
+        // pair: two Stalaggs and two Feugens after a wipe (prod, 11-27).
         uint32 summonTimer{};
         uint32 reviveTimer{};
         uint32 resetTimer{};
@@ -153,6 +155,21 @@ public:
 
         void Reset() override
         {
+            // Backstop: despawn any Stalagg/Feugen/coil summon the list does not hold (e.g. left by an earlier Thaddius
+            // object). Before BossAI::Reset, which empties the list, so only real leaks are logged.
+            for (uint32 entry : { uint32(NPC_STALAGG_40), uint32(NPC_FEUGEN_40), uint32(NPC_TESLA_COIL) })
+            {
+                std::list<Creature*> leftovers;
+                me->GetCreatureListWithEntryInGrid(leftovers, entry, 200.0f);
+                for (Creature* c : leftovers)
+                    if (c->IsSummon() && std::find(summons.begin(), summons.end(), c->GetGUID()) == summons.end())
+                    {
+                        LOG_INFO("module", "[Thaddius40] instance {} reset swept leftover {} ({}, {})", me->GetInstanceId(),
+                                 c->GetName(), c->GetGUID().ToString(), c->IsAlive() ? "alive" : "dead");
+                        c->DespawnOrUnsummon();
+                    }
+            }
+
             BossAI::Reset();
             events.Reset();
             summons.DespawnAll();
@@ -166,6 +183,18 @@ public:
 
             me->SummonCreature(NPC_STALAGG_40, 3450.45f, -2931.42f, 312.091f, 5.49779f);
             me->SummonCreature(NPC_FEUGEN_40, 3508.14f, -2988.65f, 312.092f, 2.37365f);
+            // Head count 5 s after a reset (one of each is correct). Logged so a duplicate shows up in Server.log.
+            me->m_Events.AddEventAtOffset([self = me]()
+            {
+                auto count = [self](uint32 entry)
+                {
+                    std::list<Creature*> l;
+                    self->GetCreatureListWithEntryInGrid(l, entry, 200.0f);
+                    return std::count_if(l.begin(), l.end(), [](Creature* c) { return c->IsInWorld() && c->IsAlive(); });
+                };
+                LOG_INFO("module", "[Thaddius40] instance {} after reset: {} Stalagg, {} Feugen, {} coils", self->GetInstanceId(),
+                         count(NPC_STALAGG_40), count(NPC_FEUGEN_40), count(NPC_TESLA_COIL));
+            }, 5s);
             if (Creature* cr = me->SummonCreature(NPC_TESLA_COIL, 3527.34f, -2951.56f, 318.75f, 0.0f))
             {
                 cr->RemoveAllAuras();
